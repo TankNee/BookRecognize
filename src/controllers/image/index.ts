@@ -11,13 +11,7 @@ router.post("/upload", async (req: Request, res: Response, next: NextFunction) =
                 return uploadToOSS(image.fileName, image.absolutePath);
             })
         );
-        const result = uploadOSSResults.map((uor, i) => {
-            return {
-                ...uor,
-                dimensions: images[i].dimensions,
-            };
-        });
-        res.send(result).end();
+        res.send(uploadOSSResults).end();
     } catch (error) {
         res.send(error).end();
     }

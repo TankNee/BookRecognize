@@ -10,7 +10,7 @@
     <body>
         <div id="app">
             <h3>书本识别</h3>
-            <el-upload multiple drag action="/v1/image/upload" :on-success="onUploadSuccessHandler" :on-error="onUploadErrorHandler">
+            <el-upload drag action="/v1/image/upload" :on-success="onUploadSuccessHandler" :on-error="onUploadErrorHandler">
                 <i class="el-icon-upload"></i>
                 <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             </el-upload>
