@@ -18,7 +18,7 @@
                 <el-button @click="recognizationHandler" type="primary">开始识别图像</el-button>
             </div>
             <div>
-                <canvas ref="canvas" height="1000" width="1000" :style="canvasStyle"></canvas>
+                <canvas ref="canvas" height="2000" width="2000" :style="canvasStyle"></canvas>
             </div>
         </div>
     </body>
@@ -34,10 +34,10 @@
                     visible: false,
                     canvasStyle: {
                         "background-image": "url()",
-                        "background-size": "1000px",
                         "background-repeat": "no-repeat",
                     },
                     currentImageInfo: {},
+                    recognizationInfo: {},
                 };
             },
             methods: {
@@ -50,11 +50,43 @@
                     console.error(res);
                 },
                 recognizationHandler: async function () {
-                    const result = await fetch(`/v1/image/recognization?imageOSSUrl=${this.currentImageInfo.url}`, {
-                        method: "GET",
-                    });
-                    console.log(result);
+                    const result = await fetch(`/v1/image/recognization?imageOSSUrl=${this.currentImageInfo.url}`);
+                    this.recognizationInfo = await result.json();
+                    // debugger;
+                    this.draw();
                 },
+                canvasClickHandler: function (ev) {
+                    const { recognizationInfo } = this;
+                    var x, y;
+                    if (ev.layerX || ev.layerX == 0) {
+                        x = ev.layerX;
+                        y = ev.layerY;
+                    } else if (ev.offsetX || ev.offsetX == 0) {
+                        // Opera
+                        x = ev.offsetX;
+                        y = ev.offsetY;
+                    }
+                    recognizationInfo.Data.Results.forEach((rectangle) => {
+                        const { Angle, Top, Left, Height, Width } = rectangle.TextRectangles;
+                        if (x >= Left && x <= Left + Width && y >= Top && y <= Top + Height) {
+                            console.log(rectangle.Text);
+                        }
+                    });
+                },
+                draw: function () {
+                    const { recognizationInfo } = this;
+                    const ctx = this.$refs.canvas.getContext("2d");
+                    recognizationInfo.Data.Results.forEach((rectangle) => {
+                        const { Angle, Top, Left, Height, Width } = rectangle.TextRectangles;
+                        // ctx.rotate((Angle * Math.PI) / 180);
+                        ctx.rect(Left, Top, Width, Height);
+                        console.log("rectangle:", Left, Top, Width, Height);
+                        ctx.stroke();
+                    });
+                },
+            },
+            mounted() {
+                this.$refs.canvas.addEventListener("click", this.canvasClickHandler);
             },
         });
     </script>
