@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <!-- import CSS -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+    </head>
+    <body>
+        <div id="app">
+            <h3>书本识别</h3>
+            <el-upload drag action="/v1/image/upload" :on-success="onUploadSuccessHandler" :on-error="onUploadErrorHandler">
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            </el-upload>
+            <div>
+                <el-button @click="recognizationHandler" type="primary">开始识别图像</el-button>
+            </div>
+            <div>
+                <canvas ref="canvas" height="1000" width="1000" :style="canvasStyle"></canvas>
+            </div>
+        </div>
+    </body>
+    <!-- import Vue before Element -->
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data: function () {
+                return {
+                    visible: false,
+                    canvasStyle: {
+                        "background-image": "url()",
+                        "background-size": "1000px",
+                        "background-repeat": "no-repeat",
+                    },
+                    currentImageInfo: {},
+                };
+            },
+            methods: {
+                onUploadSuccessHandler: function (res) {
+                    const imageInfo = res[0];
+                    this.currentImageInfo = imageInfo;
+                    this.canvasStyle["background-image"] = `url(${imageInfo.url})`;
+                },
+                onUploadErrorHandler: function (res) {
+                    console.error(res);
+                },
+                recognizationHandler: async function () {
+                    const result = await fetch(`/v1/image/recognization?imageOSSUrl=${this.currentImageInfo.url}`, {
+                        method: "GET",
+                    });
+                    console.log(result);
+                },
+            },
+        });
+    </script>
+</html>

@@ -11,16 +11,26 @@ router.post("/upload", async (req: Request, res: Response, next: NextFunction) =
                 return uploadToOSS(image.fileName, image.absolutePath);
             })
         );
-        const recognizeResult = await Promise.all(
-            uploadOSSResult.map((uploadedImage) => {
-                var servicePayload = {
-                    ImageURL: uploadedImage.url,
-                    MinHeight: 10,
-                    OutputProbability: true,
-                };
-                return recognizeCharacter(servicePayload);
-            })
-        );
+        const result = uploadOSSResult.map((uor, i) => {
+            return {
+                ...uor,
+                dimensions: images[i].dimensions,
+            };
+        });
+        res.send(result).end();
+    } catch (error) {
+        res.send(error).end();
+    }
+});
+router.get("/recognization", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { imageOSSUrl } = req.query;
+        const servicePayload = {
+            ImageURL: imageOSSUrl,
+            MinHeight: 10,
+            OutputProbability: true,
+        };
+        const recognizeResult = await recognizeCharacter(servicePayload);
         res.send(recognizeResult).end();
     } catch (error) {
         res.send(error).end();

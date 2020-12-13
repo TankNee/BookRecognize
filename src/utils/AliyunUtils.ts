@@ -2,8 +2,10 @@ import Core from "@alicloud/pop-core";
 import OSS from "ali-oss";
 import path from "path";
 import formidable from "formidable";
+import imageSize from "image-size";
 import fs from "fs";
 import { Request } from "express";
+import { ISizeCalculationResult } from "image-size/dist/types/interface";
 
 const client = new Core({
     accessKeyId: process.env["ACCESS_KEY"] || "",
@@ -28,6 +30,13 @@ var requestOption = {
     method: "POST",
 };
 
+interface UploadFile {
+    fileName: string;
+    absolutePath: string;
+    relativePath: string;
+    dimensions: ISizeCalculationResult;
+}
+
 function recognizeCharacter(payload: any) {
     params = { ...params, ...payload };
     return client.request("RecognizeCharacter", params, requestOption);
@@ -43,13 +52,13 @@ async function parseUpload(req: Request, options: any = {}) {
     form.uploadDir = options.uploadDir || path.join(__dirname + "/../../resources/upload/image");
     form.keepExtensions = true; //保留后缀
     form.maxFieldsSize = options.maxFieldsSize || 5 * 1024 * 1024; // 最大5MB
-    const result = new Promise<any[]>((resolve, reject) => {
+    const result = new Promise<UploadFile[]>((resolve, reject) => {
         form.parse(req, (err, fields, files) => {
             if (err) {
                 reject(err);
                 return;
             }
-            var fileArray = new Array();
+            var fileArray: formidable.File[] = new Array();
             var fileNameArray = new Array();
             for (var key in files) {
                 if (files[key].size === 0) {
@@ -67,10 +76,12 @@ async function parseUpload(req: Request, options: any = {}) {
                 var newFileName = `${Date.now()}${Math.floor(Math.random() * 10000000)}.${suffix}`;
                 var newPath = `${form.uploadDir}/${newFileName}`;
                 fs.renameSync(file.path, newPath);
+                var dimensions = imageSize(newPath);
                 fileNameArray.push({
                     fileName: newFileName,
                     absolutePath: newPath,
                     relativePath: `/resources/upload/image/${newFileName}`,
+                    dimensions: dimensions,
                 });
             });
             resolve(fileNameArray);
