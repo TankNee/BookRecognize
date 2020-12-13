@@ -9,6 +9,7 @@ export interface Item {
     description: string;
     type: string;
     pic: string | undefined;
+    link: string | undefined;
 }
 
 const COOKIE = process.env["COOKIE"];
@@ -35,8 +36,9 @@ async function crawlDoubanRate(bookName: string | any) {
             const info = $(element).children(".content").children(".title").children(".rating-info");
 
             const type = head.children("span").text().trim();
+            const link = head.children("a").attr("href");
             const title = head.children("a").text().trim();
-            const rate = parseInt(info.children(".rating_nums").text().trim());
+            const rate = parseFloat(info.children(".rating_nums").text().trim());
             const author = info.children(".subject-cast").text().trim();
             const description = $(element).children(".content").children("p").text().trim();
             result.push({
@@ -46,6 +48,7 @@ async function crawlDoubanRate(bookName: string | any) {
                 author,
                 description,
                 pic,
+                link,
             });
         });
         return result;

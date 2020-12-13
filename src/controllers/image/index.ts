@@ -6,12 +6,12 @@ const router = Router();
 router.post("/upload", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const images = await parseUpload(req);
-        const uploadOSSResult = await Promise.all(
+        const uploadOSSResults = await Promise.all(
             images.map((image, index) => {
                 return uploadToOSS(image.fileName, image.absolutePath);
             })
         );
-        const result = uploadOSSResult.map((uor, i) => {
+        const result = uploadOSSResults.map((uor, i) => {
             return {
                 ...uor,
                 dimensions: images[i].dimensions,

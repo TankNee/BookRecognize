@@ -10,13 +10,29 @@
     <body>
         <div id="app">
             <h3>书本识别</h3>
-            <el-upload drag action="/v1/image/upload" :on-success="onUploadSuccessHandler" :on-error="onUploadErrorHandler">
+            <el-upload multiple drag action="/v1/image/upload" :on-success="onUploadSuccessHandler" :on-error="onUploadErrorHandler">
                 <i class="el-icon-upload"></i>
                 <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             </el-upload>
             <div>
                 <el-button @click="recognizationHandler" type="primary">开始识别图像</el-button>
             </div>
+            <el-table
+                v-loading="loading"
+                :data="doubanResult"
+                style="width: 100%"
+                stripe
+                border
+                @row-click="rowClickHandler"
+                row-class-name="table-row"
+            >
+                <el-table-column prop="type" label="类型" width="100"> </el-table-column>
+                <el-table-column prop="title" label="名称" width="180"> </el-table-column>
+                <el-table-column prop="rate" label="评分" width="50"> </el-table-column>
+                <el-table-column prop="author" label="作者"> </el-table-column>
+                <el-table-column prop="description" label="描述"> </el-table-column>
+                <!-- <el-table-column prop="rate" label="评分"> </el-table-column> -->
+            </el-table>
             <div>
                 <canvas ref="canvas" height="2000" width="2000" :style="canvasStyle"></canvas>
             </div>
@@ -38,6 +54,8 @@
                     },
                     currentImageInfo: {},
                     recognizationInfo: {},
+                    doubanResult: [],
+                    loading: false,
                 };
             },
             methods: {
@@ -45,6 +63,7 @@
                     const imageInfo = res[0];
                     this.currentImageInfo = imageInfo;
                     this.canvasStyle["background-image"] = `url(${imageInfo.url})`;
+                    this.$refs.canvas.height = this.$refs.canvas.height;
                 },
                 onUploadErrorHandler: function (res) {
                     console.error(res);
@@ -66,7 +85,7 @@
                         x = ev.offsetX;
                         y = ev.offsetY;
                     }
-                    recognizationInfo.Data.Results.forEach((rectangle) => {
+                    recognizationInfo.Data.Results.forEach(async (rectangle) => {
                         const { Angle, Top, Left, Height, Width } = rectangle.TextRectangles;
                         if (x >= Left && x <= Left + Width && y >= Top && y <= Top + Height) {
                             this.$notify({
@@ -74,9 +93,22 @@
                                 message: rectangle.Text,
                                 type: "success",
                             });
+                            window.scrollTo({
+                                top: 0,
+                                behavior: "smooth",
+                            });
+                            this.loading = true;
+                            const result = await fetch(`/v1/douban/info?bookName=${rectangle.Text}`);
+                            const doubanResult = await result.json();
+                            this.doubanResult = doubanResult;
+                            this.loading = false;
+
                             // console.log(rectangle.Text);
                         }
                     });
+                },
+                rowClickHandler: function (row) {
+                    window.open(row.link);
                 },
                 draw: function () {
                     const { recognizationInfo } = this;
@@ -93,4 +125,24 @@
             },
         });
     </script>
+    <style>
+        .el-carousel__item h3 {
+            color: #475669;
+            font-size: 14px;
+            opacity: 0.75;
+            /* line-height: 200px; */
+            margin: 0;
+        }
+
+        .el-carousel__item:nth-child(2n) {
+            background-color: #99a9bf;
+        }
+
+        .el-carousel__item:nth-child(2n + 1) {
+            background-color: #d3dce6;
+        }
+        .table-row {
+            cursor: pointer;
+        }
+    </style>
 </html>
