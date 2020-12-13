@@ -69,7 +69,12 @@
                     recognizationInfo.Data.Results.forEach((rectangle) => {
                         const { Angle, Top, Left, Height, Width } = rectangle.TextRectangles;
                         if (x >= Left && x <= Left + Width && y >= Top && y <= Top + Height) {
-                            console.log(rectangle.Text);
+                            this.$notify({
+                                title: "识别成功",
+                                message: rectangle.Text,
+                                type: "success",
+                            });
+                            // console.log(rectangle.Text);
                         }
                     });
                 },
@@ -78,9 +83,7 @@
                     const ctx = this.$refs.canvas.getContext("2d");
                     recognizationInfo.Data.Results.forEach((rectangle) => {
                         const { Angle, Top, Left, Height, Width } = rectangle.TextRectangles;
-                        // ctx.rotate((Angle * Math.PI) / 180);
                         ctx.rect(Left, Top, Width, Height);
-                        console.log("rectangle:", Left, Top, Width, Height);
                         ctx.stroke();
                     });
                 },
